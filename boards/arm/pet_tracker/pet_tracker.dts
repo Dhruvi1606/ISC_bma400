@@ -1,0 +1,178 @@
+// Copyright (c) 2024 Nordic Semiconductor ASA
+// SPDX-License-Identifier: Apache-2.0
+
+/dts-v1/;
+#include <nordic/nrf52840_qiaa.dtsi>
+#include "pet_tracker_pinctrl.dtsi"
+
+/ {
+	model = "Pet Tracker";
+	compatible = "indiesemic,pet-tracker";
+
+	chosen {
+		zephyr,sram = &sram0;
+		zephyr,flash = &flash0;
+		zephyr,code-partition = &slot0_partition;
+		zephyr,uart-mcumgr = &cdc_acm_uart0;
+		zephyr,console = &cdc_acm_uart0;
+		zephyr,shell-uart = &cdc_acm_uart0;
+		zephyr,bt-mon-uart = &cdc_acm_uart0;
+		zephyr,bt-c2h-uart = &cdc_acm_uart0;
+	};
+
+	buttons {
+		compatible = "gpio-keys";
+		button0: button_0 {
+			gpios = <&gpio0 10 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+		};
+	};
+
+	leds {
+		compatible = "gpio-leds";
+		led0: led_0 {
+			gpios = <&gpio1 7 0>;
+		};
+
+		led1: led_1 {
+			gpios = <&gpio1 9 GPIO_ACTIVE_HIGH>;
+		};
+
+		led2: led_2 {
+			gpios = <&gpio1 12 0>;
+		};
+
+		statusop: status_op {
+			gpios = <&gpio1 6 GPIO_ACTIVE_HIGH>;
+		};
+	};
+
+	ec200u {
+		compatible = "gpio-keys";
+		pwrkey:pwr_key {
+			gpios = < &gpio0 30 GPIO_ACTIVE_HIGH >;
+		};
+
+		modulerst:module_rst {
+			gpios = < &gpio0 4 GPIO_ACTIVE_HIGH >;
+		};
+	};
+
+	aliases {
+		button0 = &button0;
+		led0 = &led0;
+		led1 = &led1;
+		led2 = &led2;
+		status-op = &statusop;
+		power-en = &pwrkey;
+		module-rst = &modulerst;
+	};
+
+	bma400 {
+		compatible = "gpio-keys";
+		bmaint1:bma_int1 {
+			gpios = < &gpio1 2 GPIO_ACTIVE_HIGH >;
+		};
+		bmaint2:bma_int2 {
+			gpios = < &gpio1 11 GPIO_ACTIVE_HIGH >;
+		};
+	};
+};
+
+
+&flash0 {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		boot_partition: partition@0 {
+			label = "mcuboot";
+			reg = <0x0 0xc000>;
+		};
+		slot0_partition: partition@c000 {
+			label = "image-0";
+			reg = <0xc000 0x72000>;
+		};
+		slot1_partition: partition@7e000 {
+			label = "image-1";
+			reg = <0x7e000 0x72000>;
+		};
+		scratch_partition: partition@f0000 {
+			label = "image-scratch";
+			reg = <0xf0000 0xa000>;
+		};
+		storage_partition: partition@fa000 {
+			label = "storage";
+			reg = <0xfa000 0x6000>;
+		};
+	};
+};
+
+&uicr {
+	gpio-as-nreset;
+	nfct-pins-as-gpios;
+};
+
+&uart0 {
+	compatible = "nordic,nrf-uarte";
+};
+
+&uart1 {
+	compatible = "nordic,nrf-uarte";
+	status = "okay";
+	current-speed = <115200>;
+	pinctrl-0 = <&uart1_default>;
+	pinctrl-1 = <&uart1_sleep>;
+	pinctrl-names = "default", "sleep";
+};
+
+// &uart0 {
+// 	compatible = "nordic,nrf-uarte";
+// 	status = "okay";
+// 	current-speed = <115200>;
+// 	pinctrl-0 = <&uart0_defualt>;
+// 	pinctrl-names = "default";
+// };
+
+
+&gpio0 {
+	status = "okay";
+};
+
+&gpio1 {
+	status = "okay";
+};
+
+&gpiote {
+	status = "okay";
+};
+
+zephyr_udc0: &usbd {
+	compatible = "nordic,nrf-usbd";
+	status = "okay";
+	cdc_acm_uart0: cdc_acm_uart0 {
+		compatible = "zephyr,cdc-acm-uart";
+	};
+};
+
+&pinctrl {
+	i2c1_default: i2c1_default {
+		group1 {
+			psels = <NRF_PSEL(TWIM_SCL, 0, 13)>, <NRF_PSEL(TWIM_SDA, 0, 16)>;
+			bias-pull-up;
+		};
+	};
+};
+
+
+
+&i2c1 {
+	status = "okay";
+	pinctrl-0 = <&i2c1_default>;
+	pinctrl-names = "default";
+	bma400: bma400@14{
+		compatible="bosch,bma400";
+		reg=<0x14>;
+		label = "BMA400";
+	};
+};

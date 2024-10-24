@@ -1,0 +1,13 @@
+# Copyright (c) 2024 Nordic Semiconductor ASA
+# SPDX-License-Identifier: Apache-2.0
+
+if BOARD_PET_TRACKER
+
+config BOARD
+	default "pet_tracker"
+
+config BT_CTLR
+   default BT
+
+
+endif
